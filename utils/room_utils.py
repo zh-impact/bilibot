@@ -4,7 +4,7 @@ from typing import List
 
 def load_room_ids(csv_path: str = "roomlist.csv") -> List[int]:
     room_ids: List[int] = []
-    with open(csv_path, "r") as f:
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.reader(f)
         for row in reader:
             print(row)
