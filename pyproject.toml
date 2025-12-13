@@ -8,4 +8,6 @@ dependencies = [
     "aiohttp>=3.13.2",
     "bilibili-api-python>=17.4.0",
     "python-dotenv>=1.2.1",
+    "textual[syntax]>=6.8.0",
+    "textual-dev>=1.8.0",
 ]
