@@ -5,24 +5,12 @@ import signal
 import contextlib
 
 from dotenv import load_dotenv
-from bilibili_api import Credential, Danmaku, sync
+from bilibili_api import Danmaku, sync
 from bilibili_api.live import LiveDanmaku, LiveRoom
 
-from utils.room_utils import get_room_id
+from utils.room_utils import get_account_credential, get_room_id
 
 load_dotenv()
-
-SESSDATA = os.getenv("SESSDATA")
-BILI_JCT = os.getenv("BILI_JCT")
-
-credential = Credential(sessdata=SESSDATA, bili_jct=BILI_JCT)
-
-ROOMID = get_room_id(index=-3, csv_path="roomlist.csv")
-
-room = LiveDanmaku(ROOMID, credential=credential)
-sender = LiveRoom(ROOMID, credential=credential)
-
-BOT_UID = 3546845166963643
 
 
 def run_command(cmd: str):
@@ -39,32 +27,41 @@ def run_command(cmd: str):
     return None
 
 
-@room.on("SEND_GIFT")
-async def on_gift(event):
-    print("-" * 30)
-    print(event)
-    print("-" * 30)
+def main():
+    credential = get_account_credential("BOT")
+    ROOMID = get_room_id(index=-1, csv_path="roomlist.csv")
+    BOT_UID = os.getenv("BOT:UID")
+    room = LiveDanmaku(ROOMID, credential=credential)
+    sender = LiveRoom(ROOMID, credential=credential)
 
+    @room.on("SEND_GIFT")
+    async def on_gift(event):
+        print("-" * 30)
+        print(event)
+        print("-" * 30)
 
-@room.on("DANMU_MSG")
-async def recv(event):
-    print("-" * 30)
-    print(event["data"]["info"][2][1], event["data"]["info"][1])
-    print("-" * 30)
+    @room.on("DANMU_MSG")
+    async def recv(event):
+        print("-" * 30)
+        print(event["data"]["info"][2][1], event["data"]["info"][1])
+        print("-" * 30)
 
-    uid = event["data"]["info"][2][0]
-    if uid == BOT_UID:
-        return
+        uid = event["data"]["info"][2][0]
+        if uid == BOT_UID:
+            return
 
-    msg = event["data"]["info"][1]
-    if msg.startswith("/"):
-        cmd = msg[1:]
-        result = run_command(cmd)
-        if result is not None:
-            await sender.send_danmaku(Danmaku(result))
+        msg = event["data"]["info"][1]
+        if msg.startswith("/"):
+            cmd = msg[1:]
+            result = run_command(cmd)
+            if result is not None:
+                await sender.send_danmaku(Danmaku(result))
+
+    return room
 
 
 if __name__ == "__main__":
+    room = main()
 
     async def _shutdown():
         disconnect = getattr(room, "disconnect", None)

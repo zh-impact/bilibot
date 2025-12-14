@@ -7,8 +7,6 @@ from bilibili_api.live import LiveRoom, LiveDanmaku
 
 from utils.room_utils import get_room_id, get_account_credential
 
-load_dotenv()
-
 
 async def get_dahanghai(room: LiveRoom) -> None:
     info = await room.get_dahanghai()
