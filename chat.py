@@ -57,6 +57,18 @@ def main():
             if result is not None:
                 await sender.send_danmaku(Danmaku(result))
 
+    @room.on("INTERACT_WORD_V2")
+    async def on_interact_word(event):
+        print("-" * 30, "INTERACT_WORD_V2", "-" * 30)
+        decode_message = event["data"]["data"]["pb_decode_message"]
+        if decode_message == "success":
+            user_name = event["data"]["data"]["pb_decoded"]["uname"]
+            print(f'{user_name} 进入直播间')
+            print("-" * 30)
+        else:
+            print("Decode failed")
+            print("-" * 30)
+
     return room
 
 
