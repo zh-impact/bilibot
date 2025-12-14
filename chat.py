@@ -1,6 +1,8 @@
 import os
 import time
-# import asyncio
+import asyncio
+import signal
+import contextlib
 
 from dotenv import load_dotenv
 from bilibili_api import Credential, Danmaku, sync
@@ -17,10 +19,10 @@ credential = Credential(sessdata=SESSDATA, bili_jct=BILI_JCT)
 
 ROOMID = get_room_id(index=-3, csv_path="roomlist.csv")
 
-monitor = LiveDanmaku(ROOMID, credential=credential)
+room = LiveDanmaku(ROOMID, credential=credential)
 sender = LiveRoom(ROOMID, credential=credential)
 
-UID = 3546845166963643
+BOT_UID = 3546845166963643
 
 
 def run_command(cmd: str):
@@ -37,11 +39,23 @@ def run_command(cmd: str):
     return None
 
 
-@monitor.on("DANMU_MSG")
+@room.on("SEND_GIFT")
+async def on_gift(event):
+    print("-" * 30)
+    print(event)
+    print("-" * 30)
+
+
+@room.on("DANMU_MSG")
 async def recv(event):
+    print("-" * 30)
+    print(event["data"]["info"][2][1], event["data"]["info"][1])
+    print("-" * 30)
+
     uid = event["data"]["info"][2][0]
-    if uid == UID:
+    if uid == BOT_UID:
         return
+
     msg = event["data"]["info"][1]
     if msg.startswith("/"):
         cmd = msg[1:]
@@ -50,4 +64,35 @@ async def recv(event):
             await sender.send_danmaku(Danmaku(result))
 
 
-# sync(monitor.connect())
+if __name__ == "__main__":
+
+    async def _shutdown():
+        disconnect = getattr(room, "disconnect", None)
+        if callable(disconnect):
+            with contextlib.suppress(Exception):
+                await disconnect()
+        close = getattr(room, "close", None)
+        if callable(close):
+            with contextlib.suppress(Exception):
+                result = close()
+                if asyncio.iscoroutine(result):
+                    await result
+
+    async def _main():
+        connect_task = asyncio.create_task(room.connect())
+
+        loop = asyncio.get_running_loop()
+        with contextlib.suppress(NotImplementedError):
+            loop.add_signal_handler(signal.SIGINT, connect_task.cancel)
+
+        try:
+            await connect_task
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await _shutdown()
+
+    try:
+        asyncio.run(_main())
+    except KeyboardInterrupt:
+        print("\n已退出")

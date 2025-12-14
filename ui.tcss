@@ -1,0 +1,35 @@
+#sidebar {
+  width: 20;
+  height: 100%;
+  color: #0f2b41;
+  background: dodgerblue;
+  margin: 0 0 2 0;
+}
+
+#main {
+  height: 1fr;
+}
+
+#sidebar ListView {
+  width: 1fr;
+  height: auto;
+  margin: 2 0;
+}
+
+#sidebar Label {
+  padding: 1 2;
+}
+
+#room_meta {
+  width: 2fr;
+  min-width: 24;
+}
+
+#room_meta Label {
+  padding: 1 2;
+}
+
+#online_rank {
+  width: 1fr;
+  height: auto;
+}

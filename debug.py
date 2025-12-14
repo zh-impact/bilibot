@@ -13,7 +13,7 @@ BILI_JCT = os.getenv("BILI_JCT")
 
 credential = Credential(sessdata=SESSDATA, bili_jct=BILI_JCT)
 
-ROOMID = get_room_id(index=-3, csv_path="roomlist.csv")
+ROOMID = get_room_id(index=-1, csv_path="roomlist.csv")
 
 
 async def get_dahanghai(sender: LiveRoom) -> None:
@@ -41,7 +41,7 @@ async def get_gaonengbang(sender: LiveRoom) -> None:
 async def main():
     sender = LiveRoom(ROOMID, credential=credential)
     # await get_dahanghai(sender)
-    # await get_gaonengbang(sender)
+    await get_gaonengbang(sender)
     # await sender.send_danmaku(Danmaku("OvO"))
 
     # await live_area.fetch_live_area_data()
