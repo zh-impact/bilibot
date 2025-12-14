@@ -15,6 +15,14 @@ def get_account_credential(account_prefix: str) -> Credential:
     )
 
 
+def check_credential(account_prefix: str) -> bool:
+    return get_account_credential(account_prefix).check_refresh()
+
+
+def refresh_credential(account_prefix: str) -> None:
+    get_account_credential(account_prefix).refresh()
+
+
 def load_room_ids(csv_path: str = "roomlist.csv") -> List[int]:
     room_ids: List[int] = []
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:

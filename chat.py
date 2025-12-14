@@ -28,7 +28,7 @@ def run_command(cmd: str):
 
 
 def main():
-    credential = get_account_credential("BOT")
+    credential = get_account_credential("DD")
     ROOMID = get_room_id(index=-1, csv_path="roomlist.csv")
     BOT_UID = os.getenv("BOT:UID")
     room = LiveDanmaku(ROOMID, credential=credential)

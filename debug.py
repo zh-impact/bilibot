@@ -30,7 +30,7 @@ async def get_gaonengbang(room: LiveRoom) -> None:
 
 
 async def main(room_index: int, csv_path: str = "roomlist.csv", **kwargs) -> None:
-    credential = get_account_credential("BOT")
+    credential = get_account_credential("DD")
     ROOMID = get_room_id(index=room_index, csv_path=csv_path)
     room = LiveRoom(ROOMID, credential=credential)
 
