@@ -3,14 +3,13 @@ import asyncio
 import argparse
 
 from dotenv import load_dotenv
-from bilibili_api import Danmaku, live, user
+from bilibili_api import Credential, Danmaku, live, user
 from bilibili_api.live import LiveDanmaku, LiveRoom
 
 from utils.room_utils import get_room_id, get_account_credential
 
 
-async def get_same_followers(uid: int) -> list:
-    credential = get_account_credential("DD")
+async def get_same_followers(uid: int, credential: Credential) -> list:
     u = user.User(uid=uid, credential=credential)
     lists = await u.get_self_same_followers()
 
@@ -18,8 +17,7 @@ async def get_same_followers(uid: int) -> list:
         print(up["uname"], end=" | ")
 
 
-async def get_live_rooms() -> list:
-    credential = get_account_credential("DD")
+async def get_live_rooms(credential: Credential) -> list:
     info = await live.get_live_followers_info(True, credential=credential)
     # print(info)
 
@@ -31,9 +29,9 @@ async def get_live_rooms() -> list:
 async def main() -> None:
     credential = get_account_credential("DD")
 
-    # await get_same_followers(2)
+    # await get_same_followers(2, credential)
 
-    followed, recommend = await get_live_rooms()
+    followed, recommend = await get_live_rooms(credential)
 
     for room in followed:
         title = room["title"]
