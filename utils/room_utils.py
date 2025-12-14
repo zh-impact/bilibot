@@ -1,5 +1,18 @@
+import os
 import csv
 from typing import List
+
+from dotenv import load_dotenv
+from bilibili_api import Credential
+
+load_dotenv()
+
+
+def get_account_credential(account_prefix: str) -> Credential:
+    return Credential(
+        sessdata=os.getenv(f"{account_prefix}:SESSDATA"),
+        bili_jct=os.getenv(f"{account_prefix}:BILI_JCT"),
+    )
 
 
 def load_room_ids(csv_path: str = "roomlist.csv") -> List[int]:
@@ -7,7 +20,7 @@ def load_room_ids(csv_path: str = "roomlist.csv") -> List[int]:
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.reader(f)
         for row in reader:
-            print(row)
+            # print(row)
             room_ids.append(int(row[0]))
     return room_ids
 
