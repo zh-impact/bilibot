@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from bilibili_api import Credential, Danmaku, live, user
 from bilibili_api.live import LiveDanmaku, LiveRoom
 
-from utils.room_utils import get_room_id, get_account_credential
+from utils.room_utils import get_account_credential
 
 
 async def get_same_followers(uid: int, credential: Credential) -> list:

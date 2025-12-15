@@ -1,6 +1,7 @@
 import os
 import time
 import asyncio
+import argparse
 import signal
 import contextlib
 
@@ -27,30 +28,36 @@ def run_command(cmd: str):
     return None
 
 
-def main():
-    credential = get_account_credential("DD")
+def main(roomid: int, account: str):
+    credential = get_account_credential(account or "DD")
     ROOMID = get_room_id(index=-1, csv_path="roomlist.csv")
     BOT_UID = os.getenv("BOT:UID")
+
+    if roomid is not None:
+        ROOMID = roomid
+
     room = LiveDanmaku(ROOMID, credential=credential)
     sender = LiveRoom(ROOMID, credential=credential)
 
     @room.on("SEND_GIFT")
     async def on_gift(event):
         print("-" * 30)
-        print(event)
+        data = event["data"]["data"]
+        print(f"{data['uname']} {data['action']} {data['num']} {data['giftName']}")
         print("-" * 30)
 
     @room.on("DANMU_MSG")
     async def recv(event):
         print("-" * 30)
-        print(event["data"]["info"][2][1], event["data"]["info"][1])
+        info = event["data"]["info"]
+        msg = info[1]
+        print(f"{info[2][1]}: {msg}")
         print("-" * 30)
 
-        uid = event["data"]["info"][2][0]
+        uid = info[2][0]
         if uid == BOT_UID:
             return
 
-        msg = event["data"]["info"][1]
         if msg.startswith("/"):
             cmd = msg[1:]
             result = run_command(cmd)
@@ -63,7 +70,7 @@ def main():
         decode_message = event["data"]["data"]["pb_decode_message"]
         if decode_message == "success":
             user_name = event["data"]["data"]["pb_decoded"]["uname"]
-            print(f'{user_name} 进入直播间')
+            print(f"{user_name} 进入直播间")
             print("-" * 30)
         else:
             print("Decode failed")
@@ -73,7 +80,16 @@ def main():
 
 
 if __name__ == "__main__":
-    room = main()
+    parser = argparse.ArgumentParser(
+        prog="Bilive Chat", description="Bilibili live chat"
+    )
+
+    parser.add_argument("-r", "--roomid", type=int)
+    parser.add_argument("-a", "--account", type=str)
+
+    args = parser.parse_args()
+
+    room = main(roomid=args.roomid, account=args.account)
 
     async def _shutdown():
         disconnect = getattr(room, "disconnect", None)
