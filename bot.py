@@ -13,6 +13,8 @@ from utils.room_utils import get_account_credential, get_room_id
 from utils.bot_msg import get_welcome_msg
 # from ai import run_ai_conversation
 
+from bot_helper.ratelimit_sender import RateLimitSender
+
 load_dotenv()
 
 WAKE_WORD = "小坤小坤"
@@ -40,39 +42,6 @@ def inspect_event(event, name: str):
     print("-" * 30)
 
 
-def create_danmaku_sender(room: LiveRoom):
-    queue: asyncio.Queue = asyncio.Queue()
-    worker_task = None
-
-    async def _worker():
-        while True:
-            text, fut = await queue.get()
-            try:
-                await room.send_danmaku(Danmaku(text))
-                await asyncio.sleep(1)
-                if fut is not None and not fut.done():
-                    fut.set_result(None)
-            except Exception as e:
-                if fut is not None and not fut.done():
-                    fut.set_exception(e)
-            finally:
-                queue.task_done()
-
-    def _ensure_worker():
-        nonlocal worker_task
-        if worker_task is None or worker_task.done():
-            worker_task = asyncio.create_task(_worker())
-
-    async def send(text: str):
-        _ensure_worker()
-        loop = asyncio.get_running_loop()
-        fut = loop.create_future()
-        await queue.put((text, fut))
-        return await fut
-
-    return send
-
-
 def main(roomid: int, account: str):
     credential = get_account_credential(account or "DD")
     ROOMID = get_room_id(index=-1, csv_path="roomlist.csv")
@@ -84,7 +53,11 @@ def main(roomid: int, account: str):
     danmaku = LiveDanmaku(ROOMID, credential=credential)
     sender = LiveRoom(ROOMID, credential=credential)
 
-    danmaku_sender = create_danmaku_sender(sender)
+    async def danmaku_sender(text: str):
+        await sender.send_danmaku(Danmaku(text))
+
+    ratelimit_sender = RateLimitSender(danmaku_sender, interval=1.0)
+    await ratelimit_sender.start()
 
     @danmaku.on("GUARD_BUY")
     async def on_guard_buy(event):
@@ -95,7 +68,7 @@ def main(roomid: int, account: str):
         gift_name = data["gift_name"]
         print(f"{name} 开通了 {num} {gift_name}")
         msg = f"感谢 {name} 开通了 {gift_name}"
-        await danmaku_sender(msg)
+        await ratelimit_sender.send(msg)
 
     @danmaku.on("COMBO_SEND")
     async def on_combo_send(event):
@@ -119,7 +92,7 @@ def main(roomid: int, account: str):
         data = event["data"]["data"]
         name = data["uname"]
         print(f"{name} 点赞了直播间")
-        await danmaku_sender(f"感谢 {name} 的点赞")
+        await ratelimit_sender.send(f"感谢 {name} 的点赞")
 
     @danmaku.on("WARNING")
     async def on_warning(event):
@@ -136,7 +109,7 @@ def main(roomid: int, account: str):
         giftName = data["giftName"]
         print(f"{name} {action} {num} {giftName}")
         msg = f"感谢 {name} {action}的{num}个{giftName}"
-        await danmaku_sender(msg)
+        await ratelimit_sender.send(msg)
         print("-" * 30)
 
     @danmaku.on("DANMU_MSG")
@@ -155,7 +128,7 @@ def main(roomid: int, account: str):
         if msg.startswith(WAKE_WORD):
             result = run_command(msg)
             if result is not None:
-                await danmaku_sender(result)
+                await ratelimit_sender.send(result)
 
     @danmaku.on("INTERACT_WORD_V2")
     async def on_interact_word(event):
@@ -167,7 +140,7 @@ def main(roomid: int, account: str):
             guard_info = user_info.get("guard", {})
             level = guard_info.get("level", 0)
             print(f"{user_name} 进入直播间")
-            await danmaku_sender(get_welcome_msg(user_name, level))
+            await ratelimit_sender.send(get_welcome_msg(user_name, level))
             print("-" * 30)
         else:
             print("Decode failed")
