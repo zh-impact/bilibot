@@ -10,4 +10,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "textual[syntax]>=6.8.0",
     "textual-dev>=1.8.0",
+    "ollama>=0.6.1",
+    "langchain>=1.2.0",
+    "langchain-ollama>=1.0.1",
 ]

@@ -1,4 +1,4 @@
-from ui import BiliBotApp
+from app.bilibotapp import BiliBotApp
 
 if __name__ == "__main__":
     app = BiliBotApp()
