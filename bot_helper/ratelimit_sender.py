@@ -39,3 +39,22 @@ class RateLimitSender:
             last_sent = time.monotonic()
 
             self._queue.task_done()
+
+
+async def mock_send(message):
+    print(f"Sending: {message}")
+
+
+async def test():
+    sender = RateLimitSender(mock_send, interval=1.0)
+    await sender.start()
+
+    for i in range(5):
+        await asyncio.sleep(5)
+        await sender.send(f"Message {i}")
+
+    await sender.stop()
+
+
+if __name__ == "__main__":
+    asyncio.run(test())

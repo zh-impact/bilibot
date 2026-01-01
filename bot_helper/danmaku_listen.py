@@ -137,6 +137,13 @@ def danmaku_listen(danmaku: LiveDanmaku, send: callable, enabled_events=None):
     @only_when(DANMAKU_TYPES["COMBO_SEND"])
     async def on_combo_send(event):
         inspect_event(event, "COMBO_SEND")
+        data = event["data"]["data"]
+        uname = data["uname"]
+        action = data["action"]
+        num = data["combo_num"]
+        gift_name = data["gift_name"]
+        msg = f"{uname} 共{action}了{num}个{gift_name}"
+        print(msg)
 
     @danmaku.on(DANMAKU_TYPES["GUARD_BUY"])
     @only_when(DANMAKU_TYPES["GUARD_BUY"])
