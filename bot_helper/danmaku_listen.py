@@ -26,6 +26,8 @@ def run_command(msg: str):
 
 
 def inspect_event(event, name: str):
+    if not name == "GUARD_BUY":
+        return
     print("-" * 30, name or "Event", "-" * 30)
     print(event)
     print("-" * 30)
@@ -87,14 +89,28 @@ def danmaku_listen(danmaku: LiveDanmaku, send: callable, enabled_events=None):
         if decode_message == "success":
             decoded = event["data"]["data"]["pb_decoded"]
             uname = decoded.get("uname", "神秘人")
+
             user_info = decoded.get("user_info", {})
             guard_info = user_info.get("guard", {})
             level = guard_info.get("level", 0)
+            expired = guard_info.get("expired_str", "")
+
+            wealth_level = user_info.get("wealth", {}).get("level", 0)
+
             relation = decoded.get("user_anchor_relation", {})
             tail_guide_text = relation.get("tail_guide_text", "")
 
+            fans_medal = decoded.get("fans_medal_info", {})
+            medal_level = fans_medal.get("medal_level", 0)
+            medal_lighted = fans_medal.get("is_lighted", 0)
+
             print(f"{uname} 进入直播间")
-            print(tail_guide_text)
+            # print(tail_guide_text)
+            # print(f"medal level: {medal_level}, medal lighted: {medal_lighted}")
+            # print(f"guard level: {level}, expired: {expired}")
+            if (medal_level > 21 and not medal_lighted) or level != 0:
+                print(decoded)
+
             welcome_msg = get_welcome_msg(uname, level)
             await send(welcome_msg)
         else:
